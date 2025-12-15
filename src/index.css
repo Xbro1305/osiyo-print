@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.actions-table {
+  grid-template-columns: 100px 150px 150px 150px 200px 200px minmax(300px, 1fr) 50px;
+}
