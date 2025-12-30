@@ -394,7 +394,7 @@ export const Ram = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-[150px_150px_150px_200px_150px_100px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+            <div className="grid grid-cols-[150px_150px_150px_200px_150px_150px_100px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
               <input
                 type="text"
                 className="border-primary border-solid border-[1px] w-[80%] rounded bg-[transparent] outline-none p-sm"
@@ -497,6 +497,7 @@ export const Ram = () => {
                 suffix=" metr"
               />{" "}
               <NumericFormat
+                className="border-primary border-solid border-[1px] w-[80%] rounded bg-[transparent] outline-none p-sm"
                 value={editing?.length}
                 onValueChange={({ floatValue }) =>
                   setEditing((prev) =>

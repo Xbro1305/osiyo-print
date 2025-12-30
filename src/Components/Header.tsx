@@ -29,6 +29,9 @@ export const Header = () => {
       case "ram":
         setDisplayRole("Ram");
         break;
+      case "printer":
+        setDisplayRole("Pechat");
+        break;
       default:
         setDisplayRole("Mehmon");
         break;
@@ -78,7 +81,17 @@ export const Header = () => {
     {
       title: "Ram",
       url: "/ram",
-      allowed: ["ram  ", "admin", "superadmin"],
+      allowed: ["ram", "admin", "superadmin"],
+    },
+    {
+      title: "Pechat",
+      url: "/print",
+      allowed: ["printer", "admin", "superadmin"],
+    },
+    {
+      title: "Cho'zilish",
+      url: "/stretch",
+      allowed: ["stretch", "admin", "superadmin"],
     },
   ];
 

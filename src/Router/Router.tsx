@@ -15,6 +15,8 @@ import { Whitening } from "../Pages/Passports/Whitening/Whitening";
 import { Gazapal } from "../Pages/Passports/Gazapal/Gazapal";
 import { Painting } from "../Pages/Passports/Painting/Painting";
 import { Ram } from "../Pages/Passports/Ram/Ram";
+import { Print } from "../Pages/Passports/Print/Print";
+import { Stretch } from "../Pages/Passports/Stretch/Stretch";
 
 /* ---------------------------------------------------
    PRIVATE ROUTE — проверка роли и токена
@@ -155,5 +157,15 @@ const routesList = [
     path: "/ram",
     element: Ram,
     roles: ["ram", "superadmin", "admin"],
+  },
+  {
+    path: "/print",
+    element: Print,
+    roles: ["printer", "superadmin", "admin"],
+  },
+  {
+    path: "/stretch",
+    element: Stretch,
+    roles: ["stretch", "superadmin", "admin"],
   },
 ];
