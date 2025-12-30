@@ -463,14 +463,14 @@ const PrintRow = ({
       )}
 
       {readOnly ? (
-        <div className="flex items-center gap-[5px]">
+        <div className="flex items-center gap-[15px]">
           <img
             src={
               `${import.meta.env.VITE_APP_API_URL}${value?.design?.imageUrl}` ||
               ""
             }
             alt={value?.design?.article}
-            className="w-[150px]"
+            className="w-[100px]"
           />{" "}
           {value.design?.article}
         </div>
