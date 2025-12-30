@@ -465,7 +465,7 @@ const PrintRow = ({
       {readOnly ? (
         <div className="flex items-center gap-[5px]">
           <img
-            src={value?.design?.imageUrl || ""}
+            src={`${import.meta.env.VITE_APP_API_URL}${value?.design?.imageUrl}` || ""}
             alt={value?.design?.article}
           />{" "}
           {value.design?.article}
