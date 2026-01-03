@@ -100,6 +100,7 @@ export const Register = () => {
             <option value="ram">Ram</option>
             <option value="printer">Pechat stanok</option>
             <option value="stretch">Cho'zilish stanok</option>
+            <option value="zrelniy">Zrelniy stanok</option>
           </select>
         </label>
         <button

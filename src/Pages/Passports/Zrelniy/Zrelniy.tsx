@@ -32,34 +32,37 @@ interface Data {
   passNo: string;
   date?: string;
   user?: IUserInfo;
-  gazapalIds?: { id: number | string; value: string }[];
-  gazapals?: IPassData[];
-  length: number;
-  stretch?: number;
-  description?: string;
-  totalLength?: number;
+  printIds?: { id: number | string; value: string }[];
+  prints?: {
+    passNo: string;
+    printed: number;
+    orderName: string;
+    orderCloth: string;
+  }[];
+  speed?: number;
+  remperature?: number;
 }
 
-export const Stretch = () => {
+export const Zrelniy = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [stretches, setStretches] = useState<Data[]>([]);
+  const [zrelniy, setZrelniy] = useState<Data[]>([]);
   const [adding, setAdding] = useState<Data | null>(null);
   const [editing, setEditing] = useState<any>(null);
-  const [gazapal, setGazapal] = useState<IPassData[] | null>(null);
+  const [print, setPrint] = useState<IPassData[] | null>(null);
   const [deleting, setDeleting] = useState<Data | null>(null);
 
   const baseUrl = import.meta.env.VITE_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user") || "");
 
   const refresh = () =>
-    axios(`${baseUrl}/printing/stretch`)
-      .then((res) => setStretches(res.data.stretches))
+    axios(`${baseUrl}/printing/zrelniy`)
+      .then((res) => setZrelniy(res.data.zrelniy))
       .catch(() => toast.error("Nimadir xato"))
       .finally(() => setLoading(false));
 
   useEffect(() => {
     axios(`${baseUrl}/printing/prints`)
-      .then((res) => setGazapal(res.data.prints))
+      .then((res) => setPrint(res.data.prints))
       .catch(() => toast.error("Nimadir xato"));
 
     refresh();
@@ -73,17 +76,9 @@ export const Stretch = () => {
 
     const data = {
       ...adding,
-      stretch: adding?.stretch
-        ? adding.stretch
-        : parseFloat(
-            (
-              ((adding?.length || 0) * 100) / (adding?.totalLength || 1) -
-              100
-            ).toFixed(2)
-          ),
     };
 
-    axios(`${baseUrl}/printing/stretch`, {
+    axios(`${baseUrl}/printing/zrelniy`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -103,7 +98,7 @@ export const Stretch = () => {
 
     e.preventDefault();
 
-    axios(`${baseUrl}/printing/stretch/${editing?._id}`, {
+    axios(`${baseUrl}/printing/zrelniy/${editing?._id}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -140,7 +135,6 @@ export const Stretch = () => {
                 role: user.role,
                 shift: "",
               },
-              length: 0,
             })
           }
         >
@@ -152,25 +146,26 @@ export const Stretch = () => {
       </div>
 
       <div className="flex flex-col max-w-full w-full overflow-x-auto">
-        <div className="grid grid-cols-[150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
+        <div className="grid grid-cols-[150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
           <p>Passport No.</p>
           <p>Sana</p>
-          <p>Gazapal</p>
+          <p>Pechat</p>
+          <p>Zakaz nomi</p>
           <p>Mato nomi</p>
-          <p>Xom miqdori</p>
           <p>Pechat metri</p>
-          <p>Cho'zilish</p>
-          <p>Ishlatildi</p>
+          <p>Tezlik</p>
+          <p>Harorat</p>
+          <p>Holat</p>
           <p>Operator</p>
           <p>Smena</p>
           <p></p>
         </div>{" "}
-        {stretches.map((row: Data) =>
+        {zrelniy.map((row: Data) =>
           editing?._id === row._id ? (
             <Row
               key={row._id}
               value={editing}
-              gazapal={gazapal as any[]}
+              print={print as any[]}
               user={user}
               onChange={setEditing}
               onCancel={() => setEditing(null)}
@@ -182,7 +177,7 @@ export const Stretch = () => {
             <Row
               key={row._id}
               value={row}
-              gazapal={gazapal as any[]}
+              print={print as any[]}
               user={user}
               readOnly={true}
               setEditing={setEditing}
@@ -194,7 +189,7 @@ export const Stretch = () => {
           <Row
             key={adding._id}
             value={adding}
-            gazapal={gazapal as any[]}
+            print={print as any[]}
             user={user}
             onChange={setAdding}
             onCancel={() => setAdding(null)}
@@ -219,7 +214,7 @@ export const Stretch = () => {
                 className="p-sm rounded bg-red-600 text-white px-lg"
                 onClick={() => {
                   setLoading(true);
-                  axios(`${baseUrl}/printing/stretch/${deleting._id}`, {
+                  axios(`${baseUrl}/printing/zrelniy/${deleting._id}`, {
                     method: "DELETE",
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -248,7 +243,7 @@ export const Stretch = () => {
 
 type RowProps = {
   value: any;
-  gazapal: any[];
+  print: any[];
   user: any;
   readOnly?: boolean;
   onChange?: React.Dispatch<React.SetStateAction<any>>;
@@ -260,7 +255,7 @@ type RowProps = {
 
 const Row = ({
   value,
-  gazapal,
+  print,
   user,
   readOnly = false,
   onChange,
@@ -275,7 +270,7 @@ const Row = ({
     onChange?.((prev: any) => (prev ? { ...prev, ...patch } : prev));
 
   return (
-    <div className="grid grid-cols-[150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit">
+    <div className="grid grid-cols-[150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit">
       <input
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
@@ -294,49 +289,52 @@ const Row = ({
       />
       {readOnly ? (
         <p className="flex flex-wrap gap-[6px]">
-          {value.gazapals.map((g: any) => (
+          {value.prints.map((g: any) => (
             <span key={g._id}>{g.passNo},</span>
           ))}
         </p>
       ) : (
         <MultipleSelect
-          values={value.gazapalIds || []}
+          values={value.printIds || []}
           data={
-            gazapal?.map((g) => ({
+            print?.map((g) => ({
               id: g._id,
               value: g.passNo,
             })) || []
           }
           onChange={(items) => {
-            update({ gazapalIds: items });
-            const selectedGazapal = gazapal?.filter((g) =>
-              items.some((i: any) => i.id === g._id)
-            );
-            const totalLength = selectedGazapal?.reduce(
-              (sum, g) => sum + (g.length || 0),
-              0
-            );
-            update({ totalLength: totalLength });
+            update({ printIds: items });
           }}
         />
       )}
       <p className="flex flex-wrap gap-[6px]">
         {readOnly
-          ? value.gazapals.map((g: any) => (
-              <span key={g._id}>{g.cloth?.name},</span>
+          ? value.prints.map((g: any) => (
+              <span key={g._id}>{g.orderName},</span>
             ))
-          : gazapal
+          : print
               ?.filter((g) =>
-                (value.gazapalIds || []).some((i: any) => i.id === g._id)
+                (value.printIds || []).some((i: any) => i.id === g._id)
               )
-              .map((g) => <span key={g._id}>{g.cloth?.name},</span>)}
+              .map((g) => <span key={g._id}>{g.order.name},</span>)}
+      </p>{" "}
+      <p className="flex flex-wrap gap-[6px]">
+        {readOnly
+          ? value.prints.map((g: any) => (
+              <span key={g._id}>{g?.orderCloth},</span>
+            ))
+          : print
+              ?.filter((g) =>
+                (value.printIds || []).some((i: any) => i.id === g._id)
+              )
+              .map((g) => <span key={g._id}>{g?.order.cloth},</span>)}
       </p>
       <p className="flex flex-wrap gap-[6px]">
         {readOnly
-          ? value?.gazapals?.map((g: any) => (
+          ? value?.prints?.map((g: any) => (
               <span key={g._id}>
                 <NumericFormat
-                  value={g.length}
+                  value={g?.printed}
                   displayType="text"
                   thousandSeparator=" "
                   suffix=" metr"
@@ -344,14 +342,14 @@ const Row = ({
                 ,
               </span>
             ))
-          : gazapal
+          : print
               ?.filter((g) =>
-                (value?.gazapalIds || [])?.some((i: any) => i.id === g._id)
+                (value?.printIds || [])?.some((i: any) => i.id === g._id)
               )
               .map((g) => (
                 <span key={g._id}>
                   <NumericFormat
-                    value={g.length}
+                    value={g.order.printed}
                     displayType="text"
                     thousandSeparator=" "
                     suffix=" metr"
@@ -360,43 +358,43 @@ const Row = ({
                 </span>
               ))}
       </p>
-
       <NumericFormat
         readOnly={readOnly}
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
         }`}
-        value={value?.length || ""}
+        value={value?.speed || ""}
         thousandSeparator=" "
-        onValueChange={(v) => update({ length: v.floatValue })}
-      />
-
+        onValueChange={(v) => update({ speed: v.floatValue })}
+      />{" "}
       <NumericFormat
         readOnly={readOnly}
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
         }`}
-        value={
-          value?.stretch !== undefined
-            ? value.stretch
-            : (
-                ((value.length || 0) * 100) / (value.totalLength || 1) -
-                100
-              ).toFixed(2)
-        }
-        suffix=" %"
+        value={value?.temperature || ""}
         thousandSeparator=" "
-        displayType="text"
+        onValueChange={(v) => update({ temperature: v.floatValue })}
       />
-      <textarea
-        value={value.description || ""}
-        onChange={(e) => update({ description: e.target.value })}
-        readOnly={readOnly}
-        className={`rounded bg-transparent outline-none p-sm h-[60px] resize-none ${
-          !readOnly && "border-primary border border-solid w-[80%]"
-        }`}
-      ></textarea>
-
+      {readOnly ? (
+        <p>{value.status == "completed" ? "Tugallangan" : "Jarayonda"}</p>
+      ) : (
+        <select
+          className={`rounded bg-transparent outline-none p-sm ${
+            !readOnly && "border-primary border border-solid w-[80%]"
+          }`}
+          value={value.status || ""}
+          onChange={(e) =>
+            update({
+              status: e.target.value,
+            })
+          }
+        >
+          <option value="">Tanlang</option>
+          <option value="completed">Tugallangan</option>
+          <option value="progress">Jarayonda</option>
+        </select>
+      )}{" "}
       <p>
         {readOnly ? value.user?.name : `${user.firstname} ${user.lastname}`}
       </p>

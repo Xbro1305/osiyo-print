@@ -17,6 +17,7 @@ import { Painting } from "../Pages/Passports/Painting/Painting";
 import { Ram } from "../Pages/Passports/Ram/Ram";
 import { Print } from "../Pages/Passports/Print/Print";
 import { Stretch } from "../Pages/Passports/Stretch/Stretch";
+import { Zrelniy } from "../Pages/Passports/Zrelniy/Zrelniy";
 
 /* ---------------------------------------------------
    PRIVATE ROUTE — проверка роли и токена
@@ -167,5 +168,10 @@ const routesList = [
     path: "/stretch",
     element: Stretch,
     roles: ["stretch", "superadmin", "admin"],
+  },
+  {
+    path: "/zrelniy",
+    element: Zrelniy,
+    roles: ["zrelniy", "superadmin", "admin"],
   },
 ];

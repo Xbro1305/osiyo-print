@@ -32,6 +32,12 @@ export const Header = () => {
       case "printer":
         setDisplayRole("Pechat");
         break;
+      case "stretch":
+        setDisplayRole("Cho'zilish stanogi");
+        break;
+      case "zrelniy":
+        setDisplayRole("Zrelniy");
+        break;
       default:
         setDisplayRole("Mehmon");
         break;
@@ -92,6 +98,11 @@ export const Header = () => {
       title: "Cho'zilish",
       url: "/stretch",
       allowed: ["stretch", "admin", "superadmin"],
+    },
+    {
+      title: "Zrelniy",
+      url: "/zrelniy",
+      allowed: ["zrelniy", "admin", "superadmin"],
     },
   ];
 
