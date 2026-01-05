@@ -5,7 +5,6 @@ import { LuShare, LuTrash2 } from "react-icons/lu";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-toastify";
 import { MultipleSelect } from "../../../Components/MultipleSelect";
-import { DesignSelect } from "../../../Components/DesignSelect";
 
 interface ICloth {
   id: string;
@@ -33,106 +32,57 @@ interface Data {
   passNo: string;
   date?: string;
   user?: IUserInfo;
-  gazapalIds?: { id: number | string; value: string }[];
-  gazapals?: IPassData[];
-  order?: {
-    name?: string;
-    cloth?: string;
-    length?: number;
-    printed?: number;
-    stretch?: number;
-    status?: boolean;
-  };
-  designArt: String;
-  design?: {
-    imageUrl: string;
-    article: string;
-  };
+  printIds?: { id: number | string; value: string }[];
+  prints?: {
+    passNo: string;
+    orderName: string;
+    orderCloth: string;
+    design: {
+      article: string;
+      imageUrl: string;
+    };
+    printed: number;
+  }[];
+  width?: number;
+  finished?: number;
 }
 
-export const Print = () => {
+export const Calander = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [prints, setPrint] = useState<Data[]>([]);
+  const [data, setData] = useState<Data[]>([]);
   const [adding, setAdding] = useState<Data | null>(null);
   const [editing, setEditing] = useState<any>(null);
-  const [gazapal, setGazapal] = useState<IPassData[] | null>(null);
+  const [print, setPrint] = useState<IPassData[] | null>(null);
   const [deleting, setDeleting] = useState<Data | null>(null);
 
-  const [items, setItems] = useState<any[] | null>(null);
-  const [query, setQuery] = useState<string>("");
   const baseUrl = import.meta.env.VITE_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user") || "");
-  const token = localStorage.getItem("token") || "";
 
   const refresh = () =>
-    axios(`${baseUrl}/printing/prints`)
-      .then((res) => setPrint(res.data.prints))
+    axios(`${baseUrl}/printing/calander`)
+      .then((res) => setData(res.data.data))
       .catch(() => toast.error("Nimadir xato"))
       .finally(() => setLoading(false));
 
   useEffect(() => {
-    axios(`${baseUrl}/printing/gazapal`)
-      .then((res) => setGazapal(res.data.gazapal))
+    axios(`${baseUrl}/printing/prints`)
+      .then((res) => setPrint(res.data.prints))
       .catch(() => toast.error("Nimadir xato"));
-
-    // axios(`${baseUrl}/printing/clothes`)
-    //   .then((res) => setClothes(res.data.clothes))
-    //   .catch(() => toast.error("Nimadir xato"));
-
-    // axios(`${baseUrl}/designs`, {
-    //   method: "GET",
-    //   headers: {
-    //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-    //   },
-    // })
-    //   .then((res) => {
-    //     setDesigns(res.data.innerData || []);
-    //   })
-    //   .catch((err) => {
-    //     console.error("Error fetching items:", err);
-    //   });
 
     refresh();
   }, []);
 
-  useEffect(() => getByQuery(), [query]);
-
-  const getByQuery = () => {
-    axios(`${baseUrl}/designs?article=${query}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        setItems(res.data.innerData || []);
-      })
-      .catch((err) => {
-        console.error("Error fetching items:", err);
-      })
-      .finally(() => setLoading(false));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
-    setLoading(true);
-
     e.preventDefault();
+    if (!adding) return;
+
+    setLoading(true);
 
     const data = {
       ...adding,
-      order: {
-        ...adding?.order,
-        stretch: adding?.order?.length
-          ? Math.round(
-              ((adding?.order?.printed || 0) * 100) /
-                (adding?.order?.length || 1) -
-                100
-            )
-          : 0,
-      },
     };
 
-    axios(`${baseUrl}/printing/prints`, {
+    axios(`${baseUrl}/printing/calander`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -152,7 +102,7 @@ export const Print = () => {
 
     e.preventDefault();
 
-    axios(`${baseUrl}/printing/prints/${editing?._id}`, {
+    axios(`${baseUrl}/printing/calander/${editing?._id}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -189,8 +139,6 @@ export const Print = () => {
                 role: user.role,
                 shift: "",
               },
-
-              designArt: "",
             })
           }
         >
@@ -202,33 +150,28 @@ export const Print = () => {
       </div>
 
       <div className="flex flex-col max-w-full w-full overflow-x-auto">
-        <div className="grid grid-cols-[150px_150px_250px_150px_150px_200px_250px_250px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
+        <div className="grid grid-cols-[150px_150px_250px_150px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
           <p>Passport No.</p>
           <p>Sana</p>
-          <p>Gazapal</p>
+          <p>Pechat</p>
+          <p>Zakaz nomi</p>
           <p>Mato nomi</p>
-          <p>Xom miqdori</p>
-          <p>Zakaz</p>
-          <p>Zakaz matosi</p>
+          <p>Pechat metri</p>
           <p>Design</p>
-          <p>Zakaz metri</p>
-          <p>Bosildi</p>
-          <p>Zakazga qo'shildi</p>
+          <p>Eni</p>
+          <p>Calander qilindi</p>
           <p>Holat</p>
           <p>Operator</p>
           <p>Smena</p>
           <p></p>
         </div>{" "}
-        {prints.map((row) =>
+        {data.map((row: Data) =>
           editing?._id === row._id ? (
-            <PrintRow
+            <Row
               key={row._id}
               value={editing}
-              gazapal={gazapal as any[]}
+              print={print as any[]}
               user={user}
-              items={items as any[]}
-              query={query}
-              setQuery={setQuery}
               onChange={setEditing}
               onCancel={() => setEditing(null)}
               onSubmit={() =>
@@ -236,13 +179,11 @@ export const Print = () => {
               }
             />
           ) : (
-            <PrintRow
+            <Row
               key={row._id}
               value={row}
-              gazapal={gazapal as any[]}
+              print={print as any[]}
               user={user}
-              items={items as any[]}
-              query={query}
               readOnly={true}
               setEditing={setEditing}
               setDeleting={setDeleting}
@@ -250,14 +191,11 @@ export const Print = () => {
           )
         )}
         {adding && (
-          <PrintRow
+          <Row
             key={adding._id}
             value={adding}
-            gazapal={gazapal as any[]}
+            print={print as any[]}
             user={user}
-            items={items as any[]}
-            query={query}
-            setQuery={setQuery}
             onChange={setAdding}
             onCancel={() => setAdding(null)}
             onSubmit={() =>
@@ -281,7 +219,7 @@ export const Print = () => {
                 className="p-sm rounded bg-red-600 text-white px-lg"
                 onClick={() => {
                   setLoading(true);
-                  axios(`${baseUrl}/printing/prints/${deleting._id}`, {
+                  axios(`${baseUrl}/printing/calander/${deleting._id}`, {
                     method: "DELETE",
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -308,14 +246,11 @@ export const Print = () => {
   );
 };
 
-type PrintRowProps = {
+type RowProps = {
   value: any;
-  gazapal: any[];
+  print: any[];
   user: any;
-  items: any[];
-  query: string;
   readOnly?: boolean;
-  setQuery?: (v: string) => void;
   onChange?: React.Dispatch<React.SetStateAction<any>>;
   onCancel?: () => void;
   onSubmit?: () => void;
@@ -323,37 +258,24 @@ type PrintRowProps = {
   setDeleting?: (v: any) => void;
 };
 
-const PrintRow = ({
+const Row = ({
   value,
-  gazapal,
+  print,
   user,
-  items,
-  query,
   readOnly = false,
-  setQuery,
   onChange,
   onCancel,
   onSubmit,
   setEditing,
   setDeleting,
-}: PrintRowProps) => {
+}: RowProps) => {
   if (!value) return null;
 
   const update = (patch: any) =>
     onChange?.((prev: any) => (prev ? { ...prev, ...patch } : prev));
 
-  const updateOrder = (patch: any) =>
-    onChange?.((prev: any) =>
-      prev
-        ? {
-            ...prev,
-            order: { ...prev.order, ...patch },
-          }
-        : prev
-    );
-
   return (
-    <div className="grid grid-cols-[150px_150px_250px_150px_150px_200px_250px_250px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit">
+    <div className="grid grid-cols-[150px_150px_250px_150px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit">
       <input
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
@@ -362,7 +284,6 @@ const PrintRow = ({
         onChange={(e) => update({ passNo: e.target.value })}
         readOnly={readOnly}
       />
-
       <input
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
@@ -371,190 +292,141 @@ const PrintRow = ({
         onChange={(e) => update({ date: e.target.value })}
         readOnly={readOnly}
       />
-
       {readOnly ? (
         <p className="flex flex-wrap gap-[6px]">
-          {value.gazapals.map((g: any) => (
-            <span key={g._id}>{g.passNo},</span>
+          {value.prints.map((g: any) => (
+            <span key={g._id}>{g.passNo}</span>
           ))}
         </p>
       ) : (
         <MultipleSelect
-          values={value.gazapalIds || []}
+          values={value.printIds || []}
           data={
-            gazapal?.map((g) => ({
+            print?.map((g) => ({
               id: g._id,
               value: g.passNo,
             })) || []
           }
-          onChange={(items) => update({ gazapalIds: items })}
+          onChange={(items) => {
+            update({ printIds: items });
+          }}
         />
       )}
-
       <p className="flex flex-wrap gap-[6px]">
         {readOnly
-          ? value.gazapals.map((g: any) => (
-              <span key={g._id}>{g.cloth?.name},</span>
-            ))
-          : gazapal
+          ? value.prints.map((g: any) => <span key={g._id}>{g.orderName}</span>)
+          : print
               ?.filter((g) =>
-                (value.gazapalIds || []).some((i: any) => i.id === g._id)
+                (value.printIds || []).some((i: any) => i.id === g._id)
               )
-              .map((g) => <span key={g._id}>{g.cloth?.name},</span>)}
-      </p>
-
+              .map((g) => <span key={g._id}>{g.order.name}</span>)}
+      </p>{" "}
       <p className="flex flex-wrap gap-[6px]">
         {readOnly
-          ? value?.gazapals?.map((g: any) => (
+          ? value.prints.map((g: any) => (
+              <span key={g._id}>{g?.orderCloth}</span>
+            ))
+          : print
+              ?.filter((g) =>
+                (value.printIds || []).some((i: any) => i.id === g._id)
+              )
+              .map((g) => <span key={g._id}>{g?.order.cloth}</span>)}
+      </p>
+      <p className="flex flex-wrap gap-[6px]">
+        {readOnly
+          ? value?.prints?.map((g: any) => (
               <span key={g._id}>
                 <NumericFormat
-                  value={g.length}
+                  value={g?.printed}
                   displayType="text"
                   thousandSeparator=" "
                   suffix=" metr"
                 />
-                ,
               </span>
             ))
-          : gazapal
+          : print
               ?.filter((g) =>
-                (value?.gazapalIds || [])?.some((i: any) => i.id === g._id)
+                (value?.printIds || [])?.some((i: any) => i.id === g._id)
               )
               .map((g) => (
                 <span key={g._id}>
                   <NumericFormat
-                    value={g.length}
+                    value={g.order.printed}
                     displayType="text"
                     thousandSeparator=" "
                     suffix=" metr"
                   />
-                  ,
                 </span>
               ))}
+      </p>{" "}
+      <p className="flex flex-wrap gap-[6px]">
+        {readOnly
+          ? value?.prints?.map((g: any) => (
+              <div key={g._id} className="flex items-center gap-[5px]">
+                <img
+                  src={`${import.meta.env.VITE_APP_API_URL}${
+                    g?.design?.imageUrl
+                  }`}
+                  className="w-[50px] aspect-square"
+                  alt={g?.design?.article}
+                />
+                <p>{g?.design?.article}</p>
+              </div>
+            ))
+          : print
+              ?.filter((g) =>
+                (value?.printIds || [])?.some((i: any) => i.id === g._id)
+              )
+              .map((g) => (
+                <div key={g._id} className="flex items-center gap-[5px]">
+                  <img
+                    src={`${import.meta.env.VITE_APP_API_URL}${
+                      g?.design?.imageUrl
+                    }`}
+                    className="w-[50px] aspect-square"
+                    alt={g.design?.article}
+                  />
+                  <p>{g.design.article}</p>
+                </div>
+              ))}
       </p>
-
-      <input
+      <NumericFormat
+        readOnly={readOnly}
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
         }`}
-        value={value.order?.name || ""}
-        onChange={(e) => updateOrder({ name: e.target.value })}
+        value={value?.width || ""}
+        thousandSeparator=" "
+        onValueChange={(v) => update({ width: v.floatValue })}
+      />{" "}
+      <NumericFormat
         readOnly={readOnly}
+        className={`rounded bg-transparent outline-none p-sm ${
+          !readOnly && "border-primary border border-solid w-[80%]"
+        }`}
+        value={value?.finished || ""}
+        thousandSeparator=" "
+        onValueChange={(v) => update({ finished: v.floatValue })}
       />
-
       {readOnly ? (
-        <p>{value.order?.cloth}</p>
+        <p>{value.status == "completed" ? "Tugallangan" : "Jarayonda"}</p>
       ) : (
         <select
           className={`rounded bg-transparent outline-none p-sm ${
             !readOnly && "border-primary border border-solid w-[80%]"
           }`}
-          value={value.order?.cloth || ""}
-          onChange={(e) => updateOrder({ cloth: e.target.value })}
-        >
-          <option value="">Tanlang</option>
-          <option value="Poplin Open">Poplin Open</option>
-          <option value="Poplin Close">Poplin Close</option>
-          <option value="Byaz Open">Byaz Open</option>
-          <option value="Byaz Close">Byaz Close</option>
-          <option value="Ranforce Open">Ranforce Open</option>
-          <option value="Ranforce Close">Ranforce Close</option>
-        </select>
-      )}
-
-      {readOnly ? (
-        <div className="flex items-center gap-[15px]">
-          <img
-            src={
-              `${import.meta.env.VITE_APP_API_URL}${value?.design?.imageUrl}` ||
-              ""
-            }
-            alt={value?.design?.article}
-            className="w-[100px]"
-          />{" "}
-          {value.design?.article}
-        </div>
-      ) : (
-        <DesignSelect
-          props={items}
-          query={query}
-          changeQuery={setQuery || (() => {})}
-          creating={false}
-          selected={
-            value.designArt && value.design
-              ? {
-                  ...value.design,
-                  article: value.designArt,
-                  cloth: value.design.cloth ?? "",
-                  amount: value.design.amount ?? 0,
-                  id: value.design.id ?? "",
-                }
-              : undefined
-          }
-          onChange={(design) =>
+          value={value.status || ""}
+          onChange={(e) =>
             update({
-              designArt: design?.article || "",
-              design: design
-                ? { article: design.article, image: design.image }
-                : undefined,
+              status: e.target.value,
             })
           }
-        />
-      )}
-
-      <NumericFormat
-        readOnly={readOnly}
-        className={`rounded bg-transparent outline-none p-sm ${
-          !readOnly && "border-primary border border-solid w-[80%]"
-        }`}
-        value={value.order?.length || ""}
-        thousandSeparator=" "
-        onValueChange={(v) => updateOrder({ length: v.floatValue })}
-      />
-
-      <NumericFormat
-        readOnly={readOnly}
-        className={`rounded bg-transparent outline-none p-sm ${
-          !readOnly && "border-primary border border-solid w-[80%]"
-        }`}
-        value={value.order?.printed || ""}
-        thousandSeparator=" "
-        onValueChange={(v) => updateOrder({ printed: v.floatValue })}
-      />
-
-      <NumericFormat
-        readOnly={readOnly}
-        displayType="text"
-        value={Math.round(
-          ((value.order?.printed || 0) * 100) / (value.order?.length || 1) - 100
-        )}
-        suffix=" %"
-      />
-
-      {readOnly ? (
-        <p>{value.order?.status ? "Tugallangan" : "Jarayonda"}</p>
-      ) : (
-        <select
-          className={`rounded bg-transparent outline-none p-sm ${
-            !readOnly && "border-primary border border-solid w-[80%]"
-          }`}
-          value={
-            value.order?.status == null
-              ? ""
-              : value.order?.status
-              ? "completed"
-              : "inprogress"
-          }
-          onChange={(e) =>
-            updateOrder({ status: e.target.value === "completed" })
-          }
         >
-          <option value="">Tanlanmagan</option>
-          <option value="inprogress">Jarayonda</option>
+          <option value="">Tanlang</option>
           <option value="completed">Tugallangan</option>
+          <option value="progress">Jarayonda</option>
         </select>
-      )}
-
+      )}{" "}
       <p>
         {readOnly ? value.user?.name : `${user.firstname} ${user.lastname}`}
       </p>
@@ -577,7 +449,6 @@ const PrintRow = ({
           <option value="B">B</option>
         </select>
       )}
-
       <div className="flex items-center justify-end gap-[13px]">
         {readOnly ? (
           <>

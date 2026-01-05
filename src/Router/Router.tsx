@@ -18,6 +18,10 @@ import { Ram } from "../Pages/Passports/Ram/Ram";
 import { Print } from "../Pages/Passports/Print/Print";
 import { Stretch } from "../Pages/Passports/Stretch/Stretch";
 import { Zrelniy } from "../Pages/Passports/Zrelniy/Zrelniy";
+import { Finish } from "../Pages/Passports/Finish/Finish";
+import { Finish_stretching } from "../Pages/Passports/Finish_stretching/Finish_stretching";
+import { Calander } from "../Pages/Passports/Calander/Calander";
+import { Calander_stretching } from "../Pages/Passports/Calander_stretching/Calander_stretching";
 
 /* ---------------------------------------------------
    PRIVATE ROUTE — проверка роли и токена
@@ -173,5 +177,25 @@ const routesList = [
     path: "/zrelniy",
     element: Zrelniy,
     roles: ["zrelniy", "superadmin", "admin"],
+  },
+  {
+    path: "/finish",
+    element: Finish,
+    roles: ["finish", "superadmin", "admin"],
+  },
+  {
+    path: "/finish_stretching",
+    element: Finish_stretching,
+    roles: ["finish_stretch", "superadmin", "admin"],
+  },
+  {
+    path: "/calander",
+    element: Calander,
+    roles: ["calander", "superadmin", "admin"],
+  },
+  {
+    path: "/calander_stretching",
+    element: Calander_stretching,
+    roles: ["calander_stretch", "superadmin", "admin"],
   },
 ];

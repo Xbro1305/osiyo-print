@@ -95,8 +95,8 @@ export const Catalogue = () => {
       // Сжимаем изображение если есть
       if (openedModal.image) {
         const options = {
-          maxSizeMB: 3, // максимум 3 МБ
-          maxWidthOrHeight: 2000, // опционально ограничиваем размер по ширине/высоте
+          maxSizeMB: 1, // максимум 3 МБ
+          maxWidthOrHeight: 1000, // опционально ограничиваем размер по ширине/высоте
           useWebWorker: true,
         };
         const compressedFile = await imageCompression(

@@ -104,6 +104,26 @@ export const Header = () => {
       url: "/zrelniy",
       allowed: ["zrelniy", "admin", "superadmin"],
     },
+    {
+      title: "Finish",
+      url: "/finish",
+      allowed: ["finish", "admin", "superadmin"],
+    },
+    {
+      title: "Finish cho'zilish",
+      url: "/finish_stretching",
+      allowed: ["finish_stretch", "admin", "superadmin"],
+    },
+    {
+      title: "Calander",
+      url: "/calander",
+      allowed: ["calander", "admin", "superadmin"],
+    },
+    {
+      title: "Calander cho'zilish",
+      url: "/calander_stretching",
+      allowed: ["calander_stretch", "admin", "superadmin"],
+    },
   ];
 
   const logout = () => {
@@ -117,7 +137,7 @@ export const Header = () => {
 
   return (
     <header className="p-[20px_50px] border-b border-active bg-primary flex items-center justify-between">
-      <div className="flex items-center gap-[20px]">
+      <div className="flex items-center gap-[20px] max-w-[calc(100%_-_300px)] overflow-x-auto whitespace-nowrap">
         {links
           .filter((l) => l.allowed.includes(user.role))
           .map((link) => (
