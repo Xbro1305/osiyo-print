@@ -37,7 +37,7 @@ interface Data {
 
 export const Whitening = () => {
   const [loading, setLoading] = useState<boolean>(true);
-
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [whitening, setWhitening] = useState<Data[]>([]);
   const [adding, setAdding] = useState<Data | null>(null);
   const [editing, setEditing] = useState<Data | null>(null);
@@ -101,6 +101,67 @@ export const Whitening = () => {
       .finally(() => refresh());
   };
 
+  const groupDelete = () => {
+    if (selectedIds.length === 0) {
+      toast.info("Iltimos, o'chirmoqchi bo'lgan yozuvlarni tanlang.");
+      return;
+    }
+
+    if (
+      !window.confirm("Haqiqatan ham tanlangan yozuvlarni o'chirmoqchimisiz?")
+    ) {
+      return;
+    }
+
+    setLoading(true);
+
+    console.log(selectedIds);
+
+    axios(`${baseUrl}/printing/whitening/group`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      data: { ids: selectedIds },
+    })
+      .then((res) => {
+        toast.success(res.data.message);
+        setSelectedIds([]);
+      })
+      .catch((err) => toast.success(err.response.data.msg || "Nimadir xato"))
+      .finally(() => refresh());
+  };
+
+  const exportExcel = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_API_URL}/printing/whitening/export`,
+        {
+          ids: selectedIds,
+        },
+        {
+          responseType: "blob", // 🔥 ВАЖНО
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // создаем ссылку для скачивания
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.setAttribute("download", "Oqartirish.xlsx"); // имя файла
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-[24px] p-[50px]">
       {loading && (
@@ -129,14 +190,23 @@ export const Whitening = () => {
         >
           <FaPlus /> Qo'shish
         </button>{" "}
-        <button className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg">
+        <button
+          className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
+          onClick={exportExcel}
+        >
           <LuShare /> Export
+        </button>
+        <button
+          className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
+          onClick={groupDelete}
+        >
+          <LuTrash2 /> O'chirib tashlash
         </button>
       </div>
 
       <div className="flex flex-col max-w-full w-full overflow-x-auto">
-        <div className="grid grid-cols-[150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
-          <p>Passport No.</p>
+        <div className="grid grid-cols-[30px_150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
+          <p></p> <p>Passport No.</p>
           <p>Sana</p>
           <p>Gazapal</p>
           <p>Mato nomi</p>
@@ -146,7 +216,8 @@ export const Whitening = () => {
           <p></p>
         </div>{" "}
         {adding && (
-          <div className="grid grid-cols-[150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+          <div className="grid grid-cols-[30px_150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+            <p></p>{" "}
             <input
               type="text"
               className="border-primary border-solid border-[1px] w-[80%] rounded bg-[transparent] outline-none p-sm"
@@ -296,7 +367,23 @@ export const Whitening = () => {
         )}
         {whitening?.map((item) =>
           editing?._id != item._id ? (
-            <div className="grid grid-cols-[150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+            <div className="grid grid-cols-[30px_150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+              <div className="flex items-center jutify-center">
+                <input
+                  type="checkbox"
+                  className="w-[50px] h-[20px]"
+                  checked={selectedIds.includes(item._id!)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds((prev) => [...prev, item._id!]);
+                    } else {
+                      setSelectedIds((prev) =>
+                        prev.filter((id) => id !== item._id)
+                      );
+                    }
+                  }}
+                />
+              </div>{" "}
               <p>{item.passNo}</p>
               <p>{item.date}</p>
               <p>{item.gazapal?.passNo}</p>
@@ -343,7 +430,8 @@ export const Whitening = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-[150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+            <div className="grid grid-cols-[50px_150px_150px_150px_200px_150px_minmax(200px,1fr)_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit w-full">
+              <p></p>{" "}
               <input
                 type="text"
                 className="border-primary border-solid border-[1px] w-[80%] rounded bg-[transparent] outline-none p-sm"

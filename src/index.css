@@ -12,3 +12,27 @@
 .actions-table {
   grid-template-columns: 100px 150px 150px 150px 200px 200px minmax(300px, 1fr) 50px;
 }
+
+input[type="checkbox"] {
+  appearance: none;
+}
+
+input[type="checkbox"]::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgb(148 163 184);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked::after {
+  background-color: #007bff;
+  border-color: #007bff;
+  content: "✓";
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
