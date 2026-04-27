@@ -48,16 +48,17 @@ export default {
     },
     extend: {
       backgroundColor: {
-        primary: "rgb(15 23 42 )",
-        secondary: "rgb(30 41 59)",
-        tertiary: "#33415580",
+        primary: "rgb(var(--primary) / <alpha-value>)",
+        secondary: "rgb(var(--secondary) / <alpha-value>)",
+        tertiary: "rgb(var(--tertiary) / <alpha-value>)",
       },
       borderColor: {
         primary: "#64748b4d",
         active: "rgb(125 211 252)",
       },
       textColor: {
-        primary: "rgb(148 163 184)",
+        primary: "rgb(var(--text-primary) / <alpha-value>)",
+        secondary: "rgb(var(--text-secondary))",
         white: "rgb(255 255 255)",
         black: "rgb(0 0 0)",
         active: "rgb(125 211 252)",

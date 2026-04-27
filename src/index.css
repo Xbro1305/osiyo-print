@@ -2,11 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: 248 250 252; /* #f8fafc */
+  --secondary: 226 232 240; /* #e2e8f0 */
+  --tertiary: 203 213 225; /* #cbd5e1 */
+  --text-primary: 30 41 59;
+  --text-secondary: 100 116 139;
+}
+
+.dark {
+  --primary: 15 23 42; /* твой тёмный */
+  --secondary: 30 41 59;
+  --tertiary: 51 65 85;
+  --text-primary: 148 163 184;
+  --text-secondary: 226 232 240;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: sans-serif;
+  transition: all 0.3s ease;
 }
 
 .actions-table {

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import { NavLink } from "react-router-dom";
+import { ThemeToggle } from "./ThemeToggle";
+import { useTheme } from "../hooks/darkTheme";
 
 export const Header = () => {
   const [displayRole, setDisplayRole] = useState<string>("");
+  const { theme, toggleTheme } = useTheme();
 
   const user = JSON.parse(localStorage.getItem("user") || "");
 
@@ -136,8 +139,8 @@ export const Header = () => {
   };
 
   return (
-    <header className="p-[20px_50px] border-b border-active bg-primary flex items-center justify-between">
-      <div className="flex items-center gap-[20px] max-w-[calc(100%_-_300px)] overflow-x-auto whitespace-nowrap">
+    <header className="p-[20px_50px] border-b border-active bg-primary flex items-center justify-between gap-[20px]">
+      <div className="flex items-center gap-[20px] max-w-[calc(100%_-_350px)] overflow-x-auto whitespace-nowrap">
         {links
           .filter((l) => l.allowed.includes(user.role))
           .map((link) => (
@@ -155,7 +158,7 @@ export const Header = () => {
           ))}
       </div>
       <button
-        className="flex items-center gap-[5px] text-primary cursor-pointer"
+        className="flex items-center gap-[5px] text-primary cursor-pointer whitespace-nowrap"
         onClick={logout}
       >
         {user.firstname} {"  "}
@@ -163,6 +166,7 @@ export const Header = () => {
         {displayRole}
         <MdLogout />
       </button>
+      <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
     </header>
   );
 };
