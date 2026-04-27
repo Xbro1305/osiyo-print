@@ -1,7 +1,6 @@
-import React from "react";
 import { CgMoon, CgSun } from "react-icons/cg";
 
-export const ThemeToggle = ({ theme, toggleTheme }) => {
+export const ThemeToggle = ({ theme, toggleTheme }: any) => {
   return (
     <button
       onClick={toggleTheme}
