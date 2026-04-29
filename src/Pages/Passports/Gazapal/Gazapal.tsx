@@ -219,10 +219,7 @@ const GazapalAddRow = ({
         onValueChange={(values) => {
           setAdding((prev) =>
             prev
-              ? {
-                  ...prev,
-                  length: values.floatValue ?? 0,
-                }
+              ? { ...prev, length: values.floatValue ?? 0 }
               : {
                   passNo: "",
                   date: new Date().toISOString().slice(0, 10),
@@ -254,18 +251,7 @@ const GazapalAddRow = ({
                         shift: e.target.value,
                       },
                 }
-              : {
-                  passNo: e.target.value,
-                  date: new Date().toISOString().slice(0, 10),
-                  cloth: { id: "", name: "" },
-                  length: 0,
-                  user: {
-                    id: user._id,
-                    name: getUserName(user),
-                    role: user.role,
-                    shift: e.target.value,
-                  },
-                }
+              : null
           )
         }
       >
@@ -298,7 +284,7 @@ const GazapalViewRow = ({
 }: GazapalViewRowProps) => {
   return (
     <div className={rowClass}>
-      <div className="flex items-center jutify-center">
+      <div className="flex items-center justify-center">
         <input
           type="checkbox"
           className="w-[50px] h-[20px]"
@@ -331,21 +317,19 @@ const GazapalViewRow = ({
         {user.role == "superadmin" && (
           <button
             onClick={() => {
-              const confirm = window.confirm("O'chirilsinmi?");
+              if (!window.confirm("O'chirilsinmi?")) return;
 
-              if (confirm) {
-                setLoading(true);
+              setLoading(true);
 
-                axios(`${baseUrl}/printing/gazapal/${item._id}`, {
-                  method: "DELETE",
-                  headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                  },
-                })
-                  .then((res) => toast.success(res.data.msg))
-                  .catch(() => toast.error("Nimadir xato"))
-                  .finally(() => refresh());
-              }
+              axios(`${baseUrl}/printing/gazapal/${item._id}`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              })
+                .then((res) => toast.success(res.data.msg))
+                .catch(() => toast.error("Nimadir xato"))
+                .finally(() => refresh());
             }}
           >
             <LuTrash2 />
@@ -380,14 +364,7 @@ const GazapalEditRow = ({
         value={editing.passNo}
         onChange={(e) =>
           setEditing((prev) =>
-            prev
-              ? { ...prev, passNo: e.target.value }
-              : {
-                  passNo: e.target.value,
-                  date: new Date().toISOString().slice(0, 10),
-                  cloth: { id: "", name: "" },
-                  length: 0,
-                }
+            prev ? { ...prev, passNo: e.target.value } : null
           )
         }
       />
@@ -409,12 +386,7 @@ const GazapalEditRow = ({
                     id: e.target.value,
                   },
                 }
-              : {
-                  passNo: e.target.value,
-                  date: new Date().toISOString().slice(0, 10),
-                  cloth: { id: "", name: "" },
-                  length: 0,
-                }
+              : null
           )
         }
       >
@@ -433,17 +405,7 @@ const GazapalEditRow = ({
         suffix=" metr"
         onValueChange={(values) => {
           setEditing((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  length: values.floatValue ?? 0,
-                }
-              : {
-                  passNo: "",
-                  date: new Date().toISOString().slice(0, 10),
-                  cloth: { id: "", name: "" },
-                  length: values.floatValue ?? 0,
-                }
+            prev ? { ...prev, length: values.floatValue ?? 0 } : null
           );
         }}
       />
@@ -469,18 +431,7 @@ const GazapalEditRow = ({
                         shift: e.target.value,
                       },
                 }
-              : {
-                  passNo: e.target.value,
-                  date: new Date().toISOString().slice(0, 10),
-                  cloth: { id: "", name: "" },
-                  length: 0,
-                  user: {
-                    id: user._id,
-                    name: getUserName(user),
-                    role: user.role,
-                    shift: e.target.value,
-                  },
-                }
+              : null
           )
         }
       >
@@ -508,6 +459,7 @@ export const Gazapal = () => {
   const [groupedGazapal, setGroupedGazapal] = useState<GroupedGazapal[]>([]);
   const [groupKeys, setGroupKeys] = useState<string[]>([]);
   const [isGrouped, setIsGrouped] = useState<boolean>(false);
+  const [groupModalOpen, setGroupModalOpen] = useState<boolean>(false);
   const [adding, setAdding] = useState<IPassData | null>(null);
   const [editing, setEditing] = useState<IPassData | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -557,14 +509,16 @@ export const Gazapal = () => {
       .then((res) => {
         setGroupedGazapal(res.data.grouped || []);
         setIsGrouped(true);
+        setGroupModalOpen(false);
       })
       .catch((err) => toast.error(err.response?.data?.msg || "Nimadir xato"))
       .finally(() => setLoading(false));
   };
 
-  const showDefaultTable = () => {
+  const clearGrouping = () => {
     setIsGrouped(false);
     setGroupedGazapal([]);
+    setGroupKeys([]);
     refresh();
   };
 
@@ -614,9 +568,7 @@ export const Gazapal = () => {
     try {
       const response = await axios.post(
         `${baseUrl}/printing/gazapal/export`,
-        {
-          ids: selectedIds,
-        },
+        { ids: selectedIds },
         {
           responseType: "blob",
           headers: {
@@ -681,6 +633,54 @@ export const Gazapal = () => {
         </div>
       )}
 
+      {groupModalOpen && (
+        <div className="fixed top-0 left-0 w-full h-full bg-[#00000070] flex items-center justify-center z-40">
+          <div className="bg-secondary text-primary rounded-xl p-xl w-[420px] max-w-[90%] flex flex-col gap-[18px]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl">Guruhlash</h2>
+              <button
+                className="text-[24px]"
+                onClick={() => setGroupModalOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-[10px]">
+              {groupOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex items-center gap-[10px] cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={groupKeys.includes(option.value)}
+                    onChange={() => handleGroupKeyChange(option.value)}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-[10px]">
+              <button
+                className="p-sm rounded border border-primary px-lg"
+                onClick={clearGrouping}
+              >
+                Tozalash
+              </button>
+
+              <button
+                className="p-sm rounded bg-primary text-secondary px-lg"
+                onClick={groupGazapal}
+              >
+                Guruhlash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-[10px] justify-end text-primary">
         <button
           className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
@@ -705,6 +705,22 @@ export const Gazapal = () => {
         </button>
 
         <button
+          className="p-sm rounded bg-secondary w-fit px-lg"
+          onClick={() => setGroupModalOpen(true)}
+        >
+          Guruhlash
+        </button>
+
+        {isGrouped && (
+          <button
+            className="p-sm rounded bg-secondary w-fit px-lg"
+            onClick={clearGrouping}
+          >
+            Oddiy jadval
+          </button>
+        )}
+
+        <button
           className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
           onClick={exportExcel}
         >
@@ -717,38 +733,6 @@ export const Gazapal = () => {
         >
           <LuTrash2 /> O'chirib tashlash
         </button>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-[10px] text-primary">
-        {groupOptions.map((option) => (
-          <label
-            key={option.value}
-            className="p-sm rounded bg-secondary flex items-center gap-[8px] px-lg cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              checked={groupKeys.includes(option.value)}
-              onChange={() => handleGroupKeyChange(option.value)}
-            />
-            {option.label}
-          </label>
-        ))}
-
-        <button
-          className="p-sm rounded bg-secondary w-fit px-lg"
-          onClick={groupGazapal}
-        >
-          Guruhlash
-        </button>
-
-        {isGrouped && (
-          <button
-            className="p-sm rounded bg-secondary w-fit px-lg"
-            onClick={showDefaultTable}
-          >
-            Oddiy jadval
-          </button>
-        )}
       </div>
 
       <div className="flex flex-col max-w-full w-full overflow-x-auto">
@@ -777,7 +761,7 @@ export const Gazapal = () => {
 
         {!isGrouped &&
           gazapal.map((item) =>
-            editing?._id != item._id ? (
+            editing?._id !== item._id ? (
               <GazapalViewRow
                 key={item._id}
                 item={item}
@@ -821,7 +805,7 @@ export const Gazapal = () => {
               </div>
 
               {group.items.map((item) =>
-                editing?._id != item._id ? (
+                editing?._id !== item._id ? (
                   <GazapalViewRow
                     key={item._id}
                     item={item}

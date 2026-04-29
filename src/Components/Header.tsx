@@ -61,71 +61,21 @@ export const Header = () => {
     },
 
     {
-      title: "Qoldiq",
+      title: "Qoldiqlar",
       url: "/stock",
       allowed: ["admin", "superadmin", "stockman"],
     },
 
     {
-      title: "Admin qo'shish",
+      title: "Ishchi hisob qo'shish",
       url: "/register",
       allowed: ["superadmin"],
     },
 
     {
-      title: "Gazapal",
-      url: "/gazapal",
-      allowed: ["gazapal", "admin", "superadmin"],
-    },
-    {
-      title: "Oqartirish",
-      url: "/whitening",
-      allowed: ["whitener", "admin", "superadmin"],
-    },
-    {
-      title: "Bo'yash",
-      url: "/painting",
-      allowed: ["painter", "admin", "superadmin"],
-    },
-    {
-      title: "Ram",
-      url: "/ram",
-      allowed: ["ram", "admin", "superadmin"],
-    },
-    {
-      title: "Pechat",
-      url: "/print",
-      allowed: ["printer", "admin", "superadmin"],
-    },
-    {
-      title: "Cho'zilish",
-      url: "/stretch",
-      allowed: ["stretch", "admin", "superadmin"],
-    },
-    {
-      title: "Zrelniy",
-      url: "/zrelniy",
-      allowed: ["zrelniy", "admin", "superadmin"],
-    },
-    {
-      title: "Finish",
-      url: "/finish",
-      allowed: ["finish", "admin", "superadmin"],
-    },
-    {
-      title: "Finish cho'zilish",
-      url: "/finish_stretching",
-      allowed: ["finish_stretch", "admin", "superadmin"],
-    },
-    {
-      title: "Calander",
-      url: "/calander",
-      allowed: ["calander", "admin", "superadmin"],
-    },
-    {
-      title: "Calander cho'zilish",
-      url: "/calander_stretching",
-      allowed: ["calander_stretch", "admin", "superadmin"],
+      title: "Pechat sexi",
+      url: "/printing/gazapal",
+      allowed: ["superadmin"],
     },
   ];
 
@@ -139,34 +89,36 @@ export const Header = () => {
   };
 
   return (
-    <header className="p-[20px_50px] border-b border-active bg-primary flex items-center justify-between gap-[20px]">
-      <div className="flex items-center gap-[20px] max-w-[calc(100%_-_350px)] overflow-x-auto whitespace-nowrap">
-        {links
-          .filter((l) => l.allowed.includes(user.role))
-          .map((link) => (
-            <NavLink
-              to={link.url}
-              key={link.url}
-              className={({ isActive }) =>
-                `${
-                  isActive ? "text-active font-medium" : "text-primary"
-                } hover:underline`
-              }
-            >
-              {link.title}
-            </NavLink>
-          ))}
-      </div>
-      <button
-        className="flex items-center gap-[5px] text-primary cursor-pointer whitespace-nowrap"
-        onClick={logout}
-      >
-        {user.firstname} {"  "}
-        {user.lastname}, {"  "}
-        {displayRole}
-        <MdLogout />
-      </button>
-      <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-    </header>
+    <nav>
+      <header className="p-[20px_50px] border-b border-active bg-primary flex items-center justify-between gap-[20px]">
+        <div className="flex items-center gap-[20px] max-w-[calc(100%_-_350px)] overflow-x-auto whitespace-nowrap">
+          {links
+            .filter((l) => l.allowed.includes(user.role))
+            .map((link) => (
+              <NavLink
+                to={link.url}
+                key={link.url}
+                className={({ isActive }) =>
+                  `${
+                    isActive ? "text-active font-medium" : "text-primary"
+                  } hover:underline`
+                }
+              >
+                {link.title}
+              </NavLink>
+            ))}
+        </div>
+        <button
+          className="flex items-center gap-[5px] text-primary cursor-pointer whitespace-nowrap ml-auto"
+          onClick={logout}
+        >
+          {user.firstname} {"  "}
+          {user.lastname}, {"  "}
+          {displayRole}
+          <MdLogout />
+        </button>
+        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+      </header>
+    </nav>
   );
 };

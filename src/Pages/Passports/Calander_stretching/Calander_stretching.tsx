@@ -6,11 +6,6 @@ import { NumericFormat } from "react-number-format";
 import { toast } from "react-toastify";
 import { MultipleSelect } from "../../../Components/MultipleSelect";
 
-interface ICloth {
-  id: string;
-  name: string;
-}
-
 interface IUserInfo {
   id: string;
   name: string;
@@ -22,7 +17,6 @@ interface IPassData {
   _id?: string;
   passNo?: string;
   date?: string;
-  cloth?: ICloth;
   length?: number;
   user?: IUserInfo;
 }
@@ -32,21 +26,96 @@ interface Data {
   passNo: string;
   date?: string;
   user?: IUserInfo;
+  status?: string;
   printIds?: { id: number | string; value: string }[];
   prints?: {
+    _id?: string;
     passNo: string;
     printed: number;
     orderName: string;
     orderCloth: string;
   }[];
   measured?: number;
-  stretched?: number;
+  stretched?: number | string;
   printedMeters?: number;
 }
+
+interface GroupedData {
+  _id: Record<string, string | number | string[]>;
+  count: number;
+  items: Data[];
+  totalMeasured?: number;
+  totalPrintedMeters?: number;
+}
+
+interface User {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  role: string;
+}
+
+const rowClass =
+  "grid grid-cols-[30px_150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit";
+
+const headerClass =
+  "grid grid-cols-[30px_150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit";
+
+const groupOptions = [
+  { label: "Passport No.", value: "passNo" },
+  { label: "Sana", value: "date" },
+  { label: "Holat", value: "status" },
+  { label: "Operator", value: "user.name" },
+  { label: "Smena", value: "user.shift" },
+  { label: "Pechat passporti", value: "prints.passNo" },
+  { label: "Zakaz nomi", value: "prints.orderName" },
+  { label: "Mato nomi", value: "prints.orderCloth" },
+];
+
+const formatGroupValue = (key: string, value: string | number | string[]) => {
+  const normalizedValue = Array.isArray(value) ? value.join(", ") : value;
+
+  if (key === "status") {
+    return normalizedValue === "completed" ? "Tugallangan" : "Jarayonda";
+  }
+
+  return normalizedValue || "Bo'sh";
+};
+
+const getGroupTitle = (group: GroupedData) =>
+  Object.entries(group._id)
+    .map(([key, value]) => {
+      const option = groupOptions.find(
+        (item) => item.value.replace(/\./g, "_") === key
+      );
+
+      return `${option?.label || key}: ${formatGroupValue(key, value)}`;
+    })
+    .join(" | ");
+
+const getGroupMeasured = (group: GroupedData) =>
+  group.totalMeasured ??
+  group.items?.reduce((sum, item) => sum + Number(item.measured || 0), 0);
+
+const getGroupPrinted = (group: GroupedData) =>
+  group.totalPrintedMeters ??
+  group.items?.reduce((sum, item) => {
+    const fromField = Number(item.printedMeters || 0);
+    const fromPrints =
+      item?.prints?.reduce((printSum, print) => {
+        return printSum + Number(print.printed || 0);
+      }, 0) || 0;
+
+    return sum + (fromField || fromPrints);
+  }, 0);
 
 export const Calander_stretching = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<Data[]>([]);
+  const [groupedData, setGroupedData] = useState<GroupedData[]>([]);
+  const [groupKeys, setGroupKeys] = useState<string[]>([]);
+  const [groupModalOpen, setGroupModalOpen] = useState<boolean>(false);
+  const [isGrouped, setIsGrouped] = useState<boolean>(false);
   const [adding, setAdding] = useState<Data | null>(null);
   const [editing, setEditing] = useState<any>(null);
   const [print, setPrint] = useState<IPassData[] | null>(null);
@@ -54,7 +123,7 @@ export const Calander_stretching = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const baseUrl = import.meta.env.VITE_APP_API_URL;
-  const user = JSON.parse(localStorage.getItem("user") || "");
+  const user: User = JSON.parse(localStorage.getItem("user") || "{}");
 
   const refresh = () =>
     axios(`${baseUrl}/printing/calander_stretching`)
@@ -70,17 +139,57 @@ export const Calander_stretching = () => {
     refresh();
   }, []);
 
+  const handleGroupKeyChange = (key: string) => {
+    setGroupKeys((prev) =>
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
+    );
+  };
+
+  const groupData = () => {
+    if (!groupKeys.length) {
+      toast.info("Guruhlash uchun kamida bitta maydon tanlang.");
+      return;
+    }
+
+    setLoading(true);
+    setAdding(null);
+    setEditing(null);
+
+    axios(`${baseUrl}/printing/calander_stretching/group`, {
+      method: "GET",
+      params: { keys: groupKeys.join(",") },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => {
+        setGroupedData(res.data.grouped || []);
+        setIsGrouped(true);
+        setGroupModalOpen(false);
+      })
+      .catch((err) => toast.error(err.response?.data?.msg || "Nimadir xato"))
+      .finally(() => setLoading(false));
+  };
+
+  const clearGrouping = () => {
+    setIsGrouped(false);
+    setGroupedData([]);
+    setGroupKeys([]);
+    setGroupModalOpen(false);
+    refresh();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!adding) return;
 
     setLoading(true);
 
-    const data = {
+    const submitData = {
       ...adding,
       stretched: (
-        ((Number(adding?.measured) - Number(adding?.printedMeters)) /
-          (Number(adding?.printedMeters) || 1)) *
+        ((Number(adding.measured) - Number(adding.printedMeters)) /
+          (Number(adding.printedMeters) || 1)) *
         100
       ).toFixed(2),
     };
@@ -90,20 +199,21 @@ export const Calander_stretching = () => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      data,
+      data: submitData,
     })
       .then((res) => {
-        toast.success(res.data.message);
+        toast.success(res.data.message || res.data.msg);
         setAdding(null);
+        setIsGrouped(false);
+        setGroupedData([]);
       })
-      .catch((err) => toast.success(err.response.data.msg || "Nimadir xato"))
+      .catch((err) => toast.error(err.response?.data?.msg || "Nimadir xato"))
       .finally(() => refresh());
   };
 
   const handleEdit = (e: React.FormEvent) => {
-    setLoading(true);
-
     e.preventDefault();
+    setLoading(true);
 
     axios(`${baseUrl}/printing/calander_stretching/${editing?._id}`, {
       method: "PATCH",
@@ -113,42 +223,40 @@ export const Calander_stretching = () => {
       data: editing,
     })
       .then((res) => {
-        toast.success(res.data.message);
+        toast.success(res.data.message || res.data.msg);
         setEditing(null);
+        setIsGrouped(false);
+        setGroupedData([]);
       })
-      .catch((err) => toast.success(err.response.data.msg || "Nimadir xato"))
+      .catch((err) => toast.error(err.response?.data?.msg || "Nimadir xato"))
       .finally(() => refresh());
   };
 
   const exportExcel = async () => {
     try {
       const response = await axios.post(
-        `${
-          import.meta.env.VITE_APP_API_URL
-        }/printing/calander_stretching/export`,
+        `${baseUrl}/printing/calander_stretching/export`,
+        { ids: selectedIds },
         {
-          ids: selectedIds,
-        },
-        {
-          responseType: "blob", // 🔥 ВАЖНО
+          responseType: "blob",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
 
-      // создаем ссылку для скачивания
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
 
       link.href = url;
-      link.setAttribute("download", "calander cho'zilish.xlsx"); // имя файла
+      link.setAttribute("download", "calander cho'zilish.xlsx");
       document.body.appendChild(link);
       link.click();
-
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export error:", error);
+      toast.error("Export qilishda xatolik");
     }
   };
 
@@ -166,8 +274,6 @@ export const Calander_stretching = () => {
 
     setLoading(true);
 
-    console.log(selectedIds);
-
     axios(`${baseUrl}/printing/calander_stretching/group`, {
       method: "DELETE",
       headers: {
@@ -176,10 +282,12 @@ export const Calander_stretching = () => {
       data: { ids: selectedIds },
     })
       .then((res) => {
-        toast.success(res.data.message);
+        toast.success(res.data.message || res.data.msg);
         setSelectedIds([]);
+        setIsGrouped(false);
+        setGroupedData([]);
       })
-      .catch((err) => toast.success(err.response.data.msg || "Nimadir xato"))
+      .catch((err) => toast.error(err.response?.data?.msg || "Nimadir xato"))
       .finally(() => refresh());
   };
 
@@ -192,10 +300,61 @@ export const Calander_stretching = () => {
           </div>
         </div>
       )}
-      <div className="flex items-center gap-[10px] justify-end text-primary">
+
+      {groupModalOpen && (
+        <div className="fixed top-0 left-0 w-full h-full bg-[#00000070] flex items-center justify-center z-40">
+          <div className="bg-secondary text-primary rounded-xl p-xl w-[430px] max-w-[90%] flex flex-col gap-[18px]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl">Guruhlash</h2>
+              <button
+                className="text-[24px]"
+                onClick={() => setGroupModalOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-[10px]">
+              {groupOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex items-center gap-[10px] cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={groupKeys.includes(option.value)}
+                    onChange={() => handleGroupKeyChange(option.value)}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-[10px]">
+              <button
+                className="p-sm rounded border border-primary px-lg"
+                onClick={clearGrouping}
+              >
+                Tozalash
+              </button>
+
+              <button
+                className="p-sm rounded bg-primary text-secondary px-lg"
+                onClick={groupData}
+              >
+                Guruhlash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-[10px] justify-end text-primary">
         <button
           className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
-          onClick={() =>
+          onClick={() => {
+            setIsGrouped(false);
+            setGroupedData([]);
             setAdding({
               passNo: "",
               date: new Date().toISOString().slice(0, 10),
@@ -205,17 +364,35 @@ export const Calander_stretching = () => {
                 role: user.role,
                 shift: "",
               },
-            })
-          }
+            });
+          }}
         >
           <FaPlus /> Qo'shish
-        </button>{" "}
+        </button>
+
+        <button
+          className="p-sm rounded bg-secondary w-fit px-lg"
+          onClick={() => setGroupModalOpen(true)}
+        >
+          Guruhlash
+        </button>
+
+        {isGrouped && (
+          <button
+            className="p-sm rounded bg-secondary w-fit px-lg"
+            onClick={clearGrouping}
+          >
+            Oddiy jadval
+          </button>
+        )}
+
         <button
           className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
           onClick={exportExcel}
         >
           <LuShare /> Export
         </button>
+
         <button
           className="p-sm rounded bg-secondary w-fit flex items-center gap-[10px] px-lg"
           onClick={groupDelete}
@@ -225,7 +402,7 @@ export const Calander_stretching = () => {
       </div>
 
       <div className="flex flex-col max-w-full w-full overflow-x-auto">
-        <div className="grid grid-cols-[30px_150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg bg-secondary text-primary rounded-t-[8px] border-b border-primary min-w-fit w-full">
+        <div className={headerClass}>
           <p></p>
           <p>Passport No.</p>
           <p>Sana</p>
@@ -239,37 +416,40 @@ export const Calander_stretching = () => {
           <p>Operator</p>
           <p>Smena</p>
           <p></p>
-        </div>{" "}
-        {data.map((row: Data) =>
-          editing?._id === row._id ? (
-            <Row
-              key={row._id}
-              value={editing}
-              print={print as any[]}
-              user={user}
-              onChange={setEditing}
-              onCancel={() => setEditing(null)}
-              onSubmit={() =>
-                handleEdit(new Event("submit") as unknown as React.FormEvent)
-              }
-            />
-          ) : (
-            <Row
-              key={row._id}
-              value={row}
-              print={print as any[]}
-              user={user}
-              readOnly={true}
-              setEditing={setEditing}
-              setDeleting={setDeleting}
-              selectedIds={selectedIds}
-              setSelectedIds={setSelectedIds}
-            />
-          )
-        )}
-        {adding && (
+        </div>
+
+        {!isGrouped &&
+          data.map((row) =>
+            editing?._id === row._id ? (
+              <Row
+                key={row._id}
+                value={editing}
+                print={print as any[]}
+                user={user}
+                onChange={setEditing}
+                onCancel={() => setEditing(null)}
+                onSubmit={() =>
+                  handleEdit(new Event("submit") as unknown as React.FormEvent)
+                }
+              />
+            ) : (
+              <Row
+                key={row._id}
+                value={row}
+                print={print as any[]}
+                user={user}
+                readOnly
+                setEditing={setEditing}
+                setDeleting={setDeleting}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+              />
+            )
+          )}
+
+        {!isGrouped && adding && (
           <Row
-            key={adding._id}
+            key="adding-row"
             value={adding}
             print={print as any[]}
             user={user}
@@ -280,7 +460,66 @@ export const Calander_stretching = () => {
             }
           />
         )}
+
+        {isGrouped &&
+          groupedData.map((group, index) => (
+            <div key={index} className="flex flex-col min-w-fit w-full">
+              <div className="grid grid-cols-[1fr_170px_190px_190px] gap-[10px] p-lg bg-secondary text-primary border-b border-primary min-w-fit w-full">
+                <p>{getGroupTitle(group)}</p>
+                <p>Yozuvlar: {group.count}</p>
+                <p>
+                  Pechat:{" "}
+                  <NumericFormat
+                    value={getGroupPrinted(group)}
+                    thousandSeparator=" "
+                    displayType="text"
+                    suffix=" metr"
+                  />
+                </p>
+                <p>
+                  Calander:{" "}
+                  <NumericFormat
+                    value={getGroupMeasured(group)}
+                    thousandSeparator=" "
+                    displayType="text"
+                    suffix=" metr"
+                  />
+                </p>
+              </div>
+
+              {group.items.map((row) =>
+                editing?._id === row._id ? (
+                  <Row
+                    key={row._id}
+                    value={editing}
+                    print={print as any[]}
+                    user={user}
+                    onChange={setEditing}
+                    onCancel={() => setEditing(null)}
+                    onSubmit={() =>
+                      handleEdit(
+                        new Event("submit") as unknown as React.FormEvent
+                      )
+                    }
+                  />
+                ) : (
+                  <Row
+                    key={row._id}
+                    value={row}
+                    print={print as any[]}
+                    user={user}
+                    readOnly
+                    setEditing={setEditing}
+                    setDeleting={setDeleting}
+                    selectedIds={selectedIds}
+                    setSelectedIds={setSelectedIds}
+                  />
+                )
+              )}
+            </div>
+          ))}
       </div>
+
       {deleting && (
         <div className="fixed top-0 left-0 w-full h-full bg-[#00000070] flex items-center justify-center z-50">
           <div className="bg-secondary p-5xl rounded-xl text-primary text-2xl flex flex-col gap-lg">
@@ -308,13 +547,14 @@ export const Calander_stretching = () => {
                     }
                   )
                     .then((res) => {
-                      toast.success(res.data.message);
+                      toast.success(res.data.message || res.data.msg);
                       setDeleting(null);
+                      setIsGrouped(false);
+                      setGroupedData([]);
                     })
                     .catch((err) =>
-                      toast.success(err.response.data.msg || "Nimadir xato")
+                      toast.error(err.response?.data?.msg || "Nimadir xato")
                     )
-
                     .finally(() => refresh());
                 }}
               >
@@ -361,13 +601,13 @@ const Row = ({
     onChange?.((prev: any) => (prev ? { ...prev, ...patch } : prev));
 
   return (
-    <div className="grid grid-cols-[30px_150px_150px_250px_150px_150px_150px_150px_250px_minmax(200px,1fr)_150px_150px_50px] w-full gap-[10px] p-lg text-primary border-b border-primary items-center min-w-fit">
+    <div className={rowClass}>
       {readOnly ? (
-        <div className="flex items-center jutify-center">
+        <div className="flex items-center justify-center">
           <input
             type="checkbox"
             className="w-[50px] h-[20px]"
-            checked={selectedIds?.includes(value._id!)}
+            checked={selectedIds?.includes(value._id!) || false}
             onChange={(e) => {
               if (e.target.checked) {
                 setSelectedIds?.([...(selectedIds || []), value._id!]);
@@ -380,30 +620,31 @@ const Row = ({
           />
         </div>
       ) : (
-        <>
-          <p></p>
-        </>
+        <p></p>
       )}
+
       <input
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
         }`}
-        value={value.passNo}
+        value={value.passNo || ""}
         onChange={(e) => update({ passNo: e.target.value })}
         readOnly={readOnly}
       />
+
       <input
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
         }`}
-        value={value.date}
+        value={value.date || ""}
         onChange={(e) => update({ date: e.target.value })}
         readOnly={readOnly}
       />
+
       {readOnly ? (
         <p className="flex flex-wrap gap-[6px]">
-          {value.prints.map((g: any) => (
-            <span key={g._id}>{g.passNo},</span>
+          {value.prints?.map((g: any, index: number) => (
+            <span key={g._id || index}>{g.passNo},</span>
           ))}
         </p>
       ) : (
@@ -419,41 +660,44 @@ const Row = ({
             const printedMeters =
               print
                 ?.filter((g) => (items || []).some((i: any) => i.id === g._id))
-                .map((p) => p.order.printed)
-                .reduce((sum, v) => sum + v, 0) || 0;
+                .map((p) => Number(p.order?.printed || 0))
+                ?.reduce((sum, v) => sum + v, 0) || 0;
 
             update({ printIds: items, printedMeters });
           }}
         />
       )}
+
       <p className="flex flex-wrap gap-[6px]">
         {readOnly
-          ? value.prints.map((g: any) => (
-              <span key={g._id}>{g.orderName},</span>
+          ? value.prints?.map((g: any, index: number) => (
+              <span key={g._id || index}>{g.orderName},</span>
             ))
           : print
               ?.filter((g) =>
                 (value.printIds || []).some((i: any) => i.id === g._id)
               )
-              .map((g) => <span key={g._id}>{g.order.name},</span>)}
-      </p>{" "}
-      <p className="flex flex-wrap gap-[6px]">
-        {readOnly
-          ? value.prints.map((g: any) => (
-              <span key={g._id}>{g?.orderCloth},</span>
-            ))
-          : print
-              ?.filter((g) =>
-                (value.printIds || []).some((i: any) => i.id === g._id)
-              )
-              .map((g) => <span key={g._id}>{g?.order.cloth},</span>)}
+              .map((g) => <span key={g._id}>{g.order?.name},</span>)}
       </p>
+
       <p className="flex flex-wrap gap-[6px]">
         {readOnly
-          ? value?.prints?.map((g: any) => (
-              <span key={g._id}>
+          ? value.prints?.map((g: any, index: number) => (
+              <span key={g._id || index}>{g.orderCloth},</span>
+            ))
+          : print
+              ?.filter((g) =>
+                (value.printIds || []).some((i: any) => i.id === g._id)
+              )
+              .map((g) => <span key={g._id}>{g.order?.cloth},</span>)}
+      </p>
+
+      <p className="flex flex-wrap gap-[6px]">
+        {readOnly
+          ? value.prints?.map((g: any, index: number) => (
+              <span key={g._id || index}>
                 <NumericFormat
-                  value={g?.printed}
+                  value={g.printed}
                   displayType="text"
                   thousandSeparator=" "
                   suffix=" metr"
@@ -463,12 +707,12 @@ const Row = ({
             ))
           : print
               ?.filter((g) =>
-                (value?.printIds || [])?.some((i: any) => i.id === g._id)
+                (value.printIds || []).some((i: any) => i.id === g._id)
               )
               .map((g) => (
                 <span key={g._id}>
                   <NumericFormat
-                    value={g.order.printed}
+                    value={g.order?.printed}
                     displayType="text"
                     thousandSeparator=" "
                     suffix=" metr"
@@ -477,71 +721,64 @@ const Row = ({
                 </span>
               ))}
       </p>
+
       <NumericFormat
         readOnly={readOnly}
         className={`rounded bg-transparent outline-none p-sm ${
           !readOnly && "border-primary border border-solid w-[80%]"
         }`}
-        value={value?.measured || ""}
+        value={value.measured || ""}
         thousandSeparator=" "
         onValueChange={(v) => update({ measured: v.floatValue })}
-      />{" "}
+      />
+
       <p>
         {readOnly ? (
           <NumericFormat
             displayType="text"
-            className={`rounded bg-transparent outline-none p-sm`}
-            value={value?.stretched || ""}
+            value={value.stretched || ""}
             thousandSeparator=" "
-            onValueChange={(v) => update({ temperature: v.floatValue })}
             suffix=" %"
           />
         ) : (
-          <span>
-            {value.printIds && (
-              <NumericFormat
-                value={(
-                  ((value.measured - value.printedMeters) /
-                    value.printedMeters) *
-                  100
-                ).toFixed(2)}
-                displayType="text"
-                thousandSeparator=" "
-                suffix=" %"
-              />
-            )}
-          </span>
+          value.printIds && (
+            <NumericFormat
+              value={(
+                ((Number(value.measured) - Number(value.printedMeters)) /
+                  (Number(value.printedMeters) || 1)) *
+                100
+              ).toFixed(2)}
+              displayType="text"
+              thousandSeparator=" "
+              suffix=" %"
+            />
+          )
         )}
       </p>
+
       {readOnly ? (
         <p>{value.status == "completed" ? "Tugallangan" : "Jarayonda"}</p>
       ) : (
         <select
-          className={`rounded bg-transparent outline-none p-sm ${
-            !readOnly && "border-primary border border-solid w-[80%]"
-          }`}
+          className="rounded bg-transparent outline-none p-sm border-primary border border-solid w-[80%]"
           value={value.status || ""}
-          onChange={(e) =>
-            update({
-              status: e.target.value,
-            })
-          }
+          onChange={(e) => update({ status: e.target.value })}
         >
           <option value="">Tanlang</option>
           <option value="completed">Tugallangan</option>
           <option value="progress">Jarayonda</option>
         </select>
-      )}{" "}
+      )}
+
       <p>
         {readOnly ? value.user?.name : `${user.firstname} ${user.lastname}`}
       </p>
+
       {readOnly ? (
         <p>{value.user?.shift || "Smena tanlanmagan"}</p>
       ) : (
         <select
-          className={`rounded bg-transparent outline-none p-sm ${
-            !readOnly && "border-primary border border-solid w-[80%]"
-          }`}
+          className="rounded bg-transparent outline-none p-sm border-primary border border-solid w-[80%]"
           value={value.user?.shift || ""}
           onChange={(e) =>
             update({
@@ -554,6 +791,7 @@ const Row = ({
           <option value="B">B</option>
         </select>
       )}
+
       <div className="flex items-center justify-end gap-[13px]">
         {readOnly ? (
           <>

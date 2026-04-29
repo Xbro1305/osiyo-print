@@ -1,18 +1,23 @@
-import { useEffect, type ReactNode } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Outlet, Navigate } from "react-router-dom";
+import { useEffect, type ComponentType, type ReactNode } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  NavLink,
+  Outlet,
+  Route,
+  Routes,
+} from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 
-// Pages
-import { Home } from "../Pages/Warehouse/Home/Home";
+import { Header } from "../Components/Header";
+import { Login } from "../Pages/Warehouse/Login/Login";
+import { Actions } from "../Pages/Warehouse/Actions/Actions";
 import { Catalogue } from "../Pages/Warehouse/Catalogue/Catalogue";
 import { Stock } from "../Pages/Warehouse/Stock/Stock";
-import { Login } from "../Pages/Warehouse/Login/Login";
-import { Header } from "../Components/Header";
 import { Register } from "../Pages/Register/Register";
-import { Whitening } from "../Pages/Passports/Whitening/Whitening";
 import { Gazapal } from "../Pages/Passports/Gazapal/Gazapal";
+import { Whitening } from "../Pages/Passports/Whitening/Whitening";
 import { Painting } from "../Pages/Passports/Painting/Painting";
 import { Ram } from "../Pages/Passports/Ram/Ram";
 import { Print } from "../Pages/Passports/Print/Print";
@@ -23,9 +28,90 @@ import { Finish_stretching } from "../Pages/Passports/Finish_stretching/Finish_s
 import { Calander } from "../Pages/Passports/Calander/Calander";
 import { Calander_stretching } from "../Pages/Passports/Calander_stretching/Calander_stretching";
 
-/* ---------------------------------------------------
-   PRIVATE ROUTE — проверка роли и токена
------------------------------------------------------ */
+type User = {
+  role?: string;
+};
+
+type AppRoute = {
+  path: string;
+  element: ComponentType;
+  roles: string[];
+};
+
+type LinkItem = {
+  title: string;
+  url: string;
+  allowed: string[];
+};
+
+const getUser = (): User => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const linkClass = ({ isActive }: { isActive: boolean }) =>
+  `${isActive ? "text-active font-medium" : "text-primary"} hover:underline`;
+
+const printingLinks: LinkItem[] = [
+  {
+    title: "Gazapal",
+    url: "/printing/gazapal",
+    allowed: ["gazapal", "admin", "superadmin"],
+  },
+  {
+    title: "Oqartirish",
+    url: "/printing/whitening",
+    allowed: ["whitener", "admin", "superadmin"],
+  },
+  {
+    title: "Bo'yash",
+    url: "/printing/painting",
+    allowed: ["painter", "admin", "superadmin"],
+  },
+  {
+    title: "Ram",
+    url: "/printing/ram",
+    allowed: ["ram", "admin", "superadmin"],
+  },
+  {
+    title: "Pechat",
+    url: "/printing/print",
+    allowed: ["printer", "admin", "superadmin"],
+  },
+  {
+    title: "Cho'zilish",
+    url: "/printing/stretch",
+    allowed: ["stretch", "admin", "superadmin"],
+  },
+  {
+    title: "Zrelniy",
+    url: "/printing/zrelniy",
+    allowed: ["zrelniy", "admin", "superadmin"],
+  },
+  {
+    title: "Finish",
+    url: "/printing/finish",
+    allowed: ["finish", "admin", "superadmin"],
+  },
+  {
+    title: "Finish cho'zilish",
+    url: "/printing/finish_stretching",
+    allowed: ["finish_stretch", "admin", "superadmin"],
+  },
+  {
+    title: "Calander",
+    url: "/printing/calander",
+    allowed: ["calander", "admin", "superadmin"],
+  },
+  {
+    title: "Calander cho'zilish",
+    url: "/printing/calander_stretching",
+    allowed: ["calander_stretch", "admin", "superadmin"],
+  },
+];
 
 const PrivateRoute = ({
   children,
@@ -35,20 +121,16 @@ const PrivateRoute = ({
   allowedRoles: string[];
 }) => {
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getUser();
 
   if (!token) return <Navigate to="/login" replace />;
 
-  if (!allowedRoles.includes(user.role)) {
+  if (!allowedRoles.includes(user.role || "")) {
     return <Navigate to="/forbidden" replace />;
   }
 
   return children;
 };
-
-/* ---------------------------------------------------
-   ADMIN LAYOUT — каркас + загрузка пользователя
------------------------------------------------------ */
 
 const AdminLayout = () => {
   const token = localStorage.getItem("token");
@@ -63,7 +145,7 @@ const AdminLayout = () => {
       },
     })
       .then((res) => {
-        localStorage.setItem("user", JSON.stringify(res.data.data || "{}"));
+        localStorage.setItem("user", JSON.stringify(res.data.data || {}));
       })
       .catch((err) => {
         toast.error(err.response?.data?.msg || "Login failed");
@@ -77,16 +159,33 @@ const AdminLayout = () => {
   return (
     <div className="flex flex-col min-h-screen h-fit bg-primary">
       <Header />
-      <div className="flex-1">
+      <main className="flex-1">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };
 
-/* ---------------------------------------------------
-   MAIN ROUTER — маршруты по ролям
------------------------------------------------------ */
+const PrintLayout = () => {
+  const user = getUser();
+  const filteredLinks = printingLinks.filter((link) =>
+    link.allowed.includes(user.role || "")
+  );
+
+  return (
+    <>
+      <div className="p-[10px_50px] flex items-center gap-[20px] overflow-x-auto whitespace-nowrap">
+        {filteredLinks.map((link) => (
+          <NavLink to={link.url} key={link.url} className={linkClass}>
+            {link.title}
+          </NavLink>
+        ))}
+      </div>
+
+      <Outlet />
+    </>
+  );
+};
 
 export const Router = () => {
   return (
@@ -104,28 +203,37 @@ export const Router = () => {
               }
             />
           ))}
+
+          <Route element={<PrintLayout />}>
+            {printingRoutes.map(({ path, element: Component, roles }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <PrivateRoute allowedRoles={roles}>
+                    <Component />
+                  </PrivateRoute>
+                }
+              />
+            ))}
+          </Route>
         </Route>
 
-        {/* LOGIN */}
         <Route path="/login" element={<Login />} />
-
-        {/* 403 */}
         <Route
           path="/forbidden"
           element={<div>Siz bu yerga kira olmaysiz!</div>}
         />
-
-        {/* any links */}
-        <Route path="*" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
 };
 
-const routesList = [
+const routesList: AppRoute[] = [
   {
     path: "/actions",
-    element: Home,
+    element: Actions,
     roles: ["admin", "superadmin"],
   },
   {
@@ -143,58 +251,61 @@ const routesList = [
     element: Register,
     roles: ["superadmin"],
   },
+];
+
+const printingRoutes: AppRoute[] = [
   {
-    path: "/painting",
+    path: "/printing/painting",
     element: Painting,
-    roles: ["superadmin"],
+    roles: ["painter", "superadmin", "admin"],
   },
   {
-    path: "/gazapal",
+    path: "/printing/gazapal",
     element: Gazapal,
     roles: ["gazapal", "superadmin", "admin"],
   },
   {
-    path: "/whitening",
+    path: "/printing/whitening",
     element: Whitening,
     roles: ["whitener", "superadmin", "admin"],
   },
   {
-    path: "/ram",
+    path: "/printing/ram",
     element: Ram,
     roles: ["ram", "superadmin", "admin"],
   },
   {
-    path: "/print",
+    path: "/printing/print",
     element: Print,
     roles: ["printer", "superadmin", "admin"],
   },
   {
-    path: "/stretch",
+    path: "/printing/stretch",
     element: Stretch,
     roles: ["stretch", "superadmin", "admin"],
   },
   {
-    path: "/zrelniy",
+    path: "/printing/zrelniy",
     element: Zrelniy,
     roles: ["zrelniy", "superadmin", "admin"],
   },
   {
-    path: "/finish",
+    path: "/printing/finish",
     element: Finish,
     roles: ["finish", "superadmin", "admin"],
   },
   {
-    path: "/finish_stretching",
+    path: "/printing/finish_stretching",
     element: Finish_stretching,
     roles: ["finish_stretch", "superadmin", "admin"],
   },
   {
-    path: "/calander",
+    path: "/printing/calander",
     element: Calander,
     roles: ["calander", "superadmin", "admin"],
   },
   {
-    path: "/calander_stretching",
+    path: "/printing/calander_stretching",
     element: Calander_stretching,
     roles: ["calander_stretch", "superadmin", "admin"],
   },

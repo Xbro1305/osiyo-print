@@ -8,6 +8,7 @@ export interface Item {
 }
 
 export interface ActionItem {
+  imageUrl: string;
   cloth: string;
   article: string;
   amount: number;

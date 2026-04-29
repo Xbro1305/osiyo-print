@@ -12,7 +12,7 @@ interface Modal {
   items: ActionItem[];
 }
 
-export const Home = () => {
+export const Actions = () => {
   const [addingModal, setAddingModal] = useState<Modal | false>(false);
   const [openedModal, setOpenedModal] = useState<Modal | false>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
