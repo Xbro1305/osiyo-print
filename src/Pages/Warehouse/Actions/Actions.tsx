@@ -83,6 +83,7 @@ export const Actions = () => {
                     {
                       id: 0,
                       image: "",
+                      imageUrl: "",
                       article: "",
                       amount: 0,
                       cloth: "Poplin" as const,
