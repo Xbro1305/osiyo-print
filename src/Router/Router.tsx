@@ -27,6 +27,7 @@ import { Finish } from "../Pages/Passports/Finish/Finish";
 import { Finish_stretching } from "../Pages/Passports/Finish_stretching/Finish_stretching";
 import { Calander } from "../Pages/Passports/Calander/Calander";
 import { Calander_stretching } from "../Pages/Passports/Calander_stretching/Calander_stretching";
+import { Users } from "../Pages/Users/Users";
 
 type User = {
   role?: string;
@@ -258,6 +259,11 @@ const printingRoutes: AppRoute[] = [
     path: "/printing/painting",
     element: Painting,
     roles: ["painter", "superadmin", "admin"],
+  },
+  {
+    path: "/users",
+    element: Users,
+    roles: ["superadmin"],
   },
   {
     path: "/printing/gazapal",

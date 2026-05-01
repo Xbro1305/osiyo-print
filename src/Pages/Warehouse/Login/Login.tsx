@@ -38,13 +38,44 @@ export const Login = () => {
           case "superadmin":
             window.location.href = "/actions";
             break;
-
           case "gazapal":
-            window.location.href = "/gazapal";
+            window.location.href = "/printing/gazapal";
             break;
 
           case "whitener":
-            window.location.href = "/whitening";
+            window.location.href = "/printing/whitening";
+            break;
+
+          case "ram":
+            window.location.href = "/printing/ram";
+            break;
+
+          case "printer":
+            window.location.href = "/printing/print";
+            break;
+
+          case "stretch":
+            window.location.href = "/printing/stretch";
+            break;
+
+          case "zrelniy":
+            window.location.href = "/printing/zrelniy";
+            break;
+
+          case "finish":
+            window.location.href = "/printing/finish";
+            break;
+
+          case "finish_stretch":
+            window.location.href = "/printing/finish_stretching";
+            break;
+
+          case "calander":
+            window.location.href = "/printing/calander";
+            break;
+
+          case "calander_stretch":
+            window.location.href = "/printing/calander_stretching";
             break;
         }
       })

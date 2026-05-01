@@ -1,91 +1,69 @@
-import { useEffect, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import { NavLink } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "../hooks/darkTheme";
 
+const roleLabels: Record<string, string> = {
+  superadmin: "Super Admin",
+  admin: "Admin",
+  gazapal: "Gazapal",
+  whitener: "Oqartiruvchi",
+  painter: "Bo'yoqchi",
+  ram: "Ram",
+  printer: "Pechat",
+  stretch: "Cho'zilish stanogi",
+  zrelniy: "Zrelniy",
+  finish: "Finish",
+  finish_stretch: "Finish Stretch",
+  calander: "Calander",
+  calander_stretch: "Calander Stretch",
+};
+
+const links = [
+  {
+    title: "Operatsiyalar",
+    url: "/actions",
+    allowed: ["admin", "superadmin"],
+  },
+
+  {
+    title: "Dizaynlar",
+    url: "/catalogue",
+    allowed: ["admin", "superadmin", "stockman"],
+  },
+  {
+    title: "Qoldiqlar",
+    url: "/stock",
+    allowed: ["admin", "superadmin", "stockman"],
+  },
+  {
+    title: "Ishchi hisob qo'shish",
+    url: "/register",
+    allowed: ["superadmin"],
+  },
+  {
+    title: "Foydalanuvchilar",
+    url: "/users",
+    allowed: ["superadmin"],
+  },
+  {
+    title: "Pechat sexi",
+    url: "/printing/gazapal",
+    allowed: ["superadmin"],
+  },
+];
+
 export const Header = () => {
-  const [displayRole, setDisplayRole] = useState<string>("");
   const { theme, toggleTheme } = useTheme();
 
-  const user = JSON.parse(localStorage.getItem("user") || "");
-
-  useEffect(() => {
-    if (!user) return;
-
-    switch (user.role) {
-      case "superadmin":
-        setDisplayRole("Super Admin");
-        break;
-      case "admin":
-        setDisplayRole("Admin");
-        break;
-      case "gazapal":
-        setDisplayRole("Gazapal");
-        break;
-      case "whitener":
-        setDisplayRole("Oqartiruvchi");
-        break;
-      case "painter":
-        setDisplayRole("Bo'yoqchi");
-        break;
-      case "ram":
-        setDisplayRole("Ram");
-        break;
-      case "printer":
-        setDisplayRole("Pechat");
-        break;
-      case "stretch":
-        setDisplayRole("Cho'zilish stanogi");
-        break;
-      case "zrelniy":
-        setDisplayRole("Zrelniy");
-        break;
-      default:
-        setDisplayRole("Mehmon");
-        break;
-    }
-  }, [user]);
-
-  const links = [
-    {
-      title: "Operatsiyalar",
-      url: "/actions",
-      allowed: ["admin", "superadmin"],
-    },
-
-    {
-      title: "Dizaynlar",
-      url: "/catalogue",
-      allowed: ["admin", "superadmin", "stockman"],
-    },
-
-    {
-      title: "Qoldiqlar",
-      url: "/stock",
-      allowed: ["admin", "superadmin", "stockman"],
-    },
-
-    {
-      title: "Ishchi hisob qo'shish",
-      url: "/register",
-      allowed: ["superadmin"],
-    },
-
-    {
-      title: "Pechat sexi",
-      url: "/printing/gazapal",
-      allowed: ["superadmin"],
-    },
-  ];
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const displayRole = roleLabels[user?.role] || "Mehmon";
 
   const logout = () => {
-    const confirm = window.confirm("Chiqib ketilsinmi?");
+    if (!window.confirm("Chiqib ketilsinmi?")) return;
 
-    if (confirm) {
-      localStorage.clear();
-      return window.location.reload();
-    }
+    localStorage.clear();
+    window.location.reload();
   };
 
   return (
@@ -93,30 +71,30 @@ export const Header = () => {
       <header className="p-[20px_50px] border-b border-active bg-primary flex items-center justify-between gap-[20px]">
         <div className="flex items-center gap-[20px] max-w-[calc(100%_-_350px)] overflow-x-auto whitespace-nowrap">
           {links
-            .filter((l) => l.allowed.includes(user.role))
-            .map((link) => (
+            .filter(({ allowed }) => allowed.includes(user?.role))
+            .map(({ title, url }) => (
               <NavLink
-                to={link.url}
-                key={link.url}
+                key={url}
+                to={url}
                 className={({ isActive }) =>
                   `${
                     isActive ? "text-active font-medium" : "text-primary"
                   } hover:underline`
                 }
               >
-                {link.title}
+                {title}
               </NavLink>
             ))}
         </div>
+
         <button
           className="flex items-center gap-[5px] text-primary cursor-pointer whitespace-nowrap ml-auto"
           onClick={logout}
         >
-          {user.firstname} {"  "}
-          {user.lastname}, {"  "}
-          {displayRole}
+          {user?.firstname} {user?.lastname}, {displayRole}
           <MdLogout />
         </button>
+
         <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
       </header>
     </nav>

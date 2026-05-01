@@ -600,6 +600,10 @@ video {
   display: flex;
 }
 
+.table {
+  display: table;
+}
+
 .grid {
   display: grid;
 }
@@ -744,6 +748,10 @@ video {
   min-width: fit-content;
 }
 
+.min-w-\[700px\] {
+  min-width: 700px;
+}
+
 .max-w-\[90\%\] {
   max-width: 90%;
 }
@@ -758,6 +766,10 @@ video {
 
 .flex-1 {
   flex: 1 1 0%;
+}
+
+.border-collapse {
+  border-collapse: collapse;
 }
 
 .translate-x-0 {
@@ -794,8 +806,24 @@ video {
   grid-template-columns: 150px 100px 100px;
 }
 
+.grid-cols-\[1fr_160px_180px\] {
+  grid-template-columns: 1fr 160px 180px;
+}
+
+.grid-cols-\[1fr_160px_180px_180px\] {
+  grid-template-columns: 1fr 160px 180px 180px;
+}
+
+.grid-cols-\[1fr_160px_180px_180px_180px\] {
+  grid-template-columns: 1fr 160px 180px 180px 180px;
+}
+
 .grid-cols-\[1fr_160px_190px_190px_190px\] {
   grid-template-columns: 1fr 160px 190px 190px 190px;
+}
+
+.grid-cols-\[1fr_170px_190px_170px_170px\] {
+  grid-template-columns: 1fr 170px 190px 170px 170px;
 }
 
 .grid-cols-\[1fr_170px_190px_190px\] {
@@ -838,10 +866,6 @@ video {
   grid-template-columns: 30px 150px 150px 250px 150px 150px 200px 250px 250px 150px 150px 200px 150px minmax(200px,1fr) 150px 50px;
 }
 
-.grid-cols-\[50px_150px_150px_150px_200px_150px_minmax\(200px\2c 1fr\)_150px_50px\] {
-  grid-template-columns: 50px 150px 150px 150px 200px 150px minmax(200px,1fr) 150px 50px;
-}
-
 .grid-cols-\[50px_150px_150px_200px_150px_minmax\(200px\2c 1fr\)_150px_50px\] {
   grid-template-columns: 50px 150px 150px 200px 150px minmax(200px,1fr) 150px 50px;
 }
@@ -850,20 +874,8 @@ video {
   grid-template-columns: repeat(auto-fill,300px);
 }
 
-.grid-cols-\[1fr_160px_180px_180px_180px\] {
-  grid-template-columns: 1fr 160px 180px 180px 180px;
-}
-
-.grid-cols-\[1fr_160px_180px\] {
-  grid-template-columns: 1fr 160px 180px;
-}
-
-.grid-cols-\[1fr_160px_180px_180px\] {
-  grid-template-columns: 1fr 160px 180px 180px;
-}
-
-.grid-cols-\[1fr_170px_190px_170px_170px\] {
-  grid-template-columns: 1fr 170px 190px 170px 170px;
+.grid-cols-\[1fr_1fr_1fr_1fr\] {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
 .flex-col {
@@ -1116,6 +1128,14 @@ video {
   padding: 10px;
 }
 
+.p-\[10px_50px\] {
+  padding: 10px 50px;
+}
+
+.p-\[20px\] {
+  padding: 20px;
+}
+
 .p-\[20px_50px\] {
   padding: 20px 50px;
 }
@@ -1144,22 +1164,9 @@ video {
   padding: 15px;
 }
 
-.p-\[0px_50px\] {
-  padding: 0px 50px;
-}
-
-.p-\[10px_50px\] {
-  padding: 10px 50px;
-}
-
 .px-\[10px\] {
   padding-left: 10px;
   padding-right: 10px;
-}
-
-.px-\[50px\] {
-  padding-left: 50px;
-  padding-right: 50px;
 }
 
 .px-lg {
